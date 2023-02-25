@@ -8,18 +8,23 @@
   ],
   "scripts": {
     "build": "turbo run build",
-    "dev": "turbo run dev",
+    "changeset": "changeset",
+    "clean": "turbo run clean && rm -rf node_modules",
+    "dev": "turbo run dev --no-cache --continue",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "lint": "turbo run lint",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\""
+    "release": "turbo run build --filter=docs^... && changeset publish",
+    "version-packages": "changeset version"
   },
   "devDependencies": {
-    "eslint-config-custom": "workspace:*",
-    "prettier": "latest",
-    "turbo": "latest"
+    "@changesets/cli": "^2.26.0",
+    "eslint-config-appoint": "workspace:*",
+    "prettier": "^2.8.4",
+    "prettier-plugin-packagejson": "2.4.3",
+    "turbo": "^1.8.2"
   },
+  "packageManager": "pnpm@7.27.1",
   "engines": {
     "node": ">=14.0.0"
-  },
-  "dependencies": {},
-  "packageManager": "pnpm@7.27.1"
+  }
 }

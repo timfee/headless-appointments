@@ -1,0 +1,9 @@
+{
+  "root": true,
+  "extends": ["appoint"],
+  "settings": {
+    "next": {
+      "rootDir": ["apps/*/"]
+    }
+  }
+}

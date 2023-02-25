@@ -1,0 +1,4 @@
+{
+  "plugins": ["./node_modules/prettier-plugin-packagejson/lib/index.js"],
+  "semi": false
+}
