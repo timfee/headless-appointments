@@ -6,7 +6,8 @@
     "GOOGLE_CALENDAR_CLIENT_SECRET",
     "GOOGLE_CALENDAR_REDIRECT_URL",
     "GOOGLE_CALENDAR_ACCESS",
-    "GOOGLE_CALENDAR_REFRESH"
+    "GOOGLE_CALENDAR_REFRESH",
+    "TZ"
   ],
   "pipeline": {
     "build": {
@@ -24,7 +25,6 @@
       "outputs": []
     },
     "test": {
-      "dependsOn": ["^test"],
       "outputs": ["coverage/**"]
     }
   }

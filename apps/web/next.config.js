@@ -4,5 +4,14 @@ module.exports = {
   transpilePackages: ["appoint"],
   experimental: {
     appDir: true,
+    swcMinify: true,
+    swcPlugins: [
+      [
+        "next-superjson-plugin",
+        {
+          excluded: [],
+        },
+      ],
+    ],
   },
 }

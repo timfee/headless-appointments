@@ -1,20 +1,38 @@
 import { Auth } from 'googleapis';
 
+type AvailabilitySlot = {
+    start: {
+        hour: number;
+        minute: number;
+    };
+    end: {
+        hour: number;
+        minute: number;
+    };
+};
+type AvailabilityType = {
+    [key: number]: AvailabilitySlot[];
+};
+
+type Event = {
+    start: Date;
+    end: Date;
+};
 type AppointParams = {
-    from?: Date;
-    to?: Date;
+    start?: Date;
+    end?: Date;
     duration?: number;
     padding?: number;
-    limits?: {
-        daysAllowed: number[];
-        calendarAllowList: string[];
-        fromHour: number;
-        toHour: number;
+    availability?: {
+        configuration?: {
+            dailyAvailability: AvailabilityType;
+            fallback: AvailabilitySlot[];
+        };
     };
-    timeZone?: string;
+    ownerTimezone?: string;
     OAuthClient: Auth.OAuth2ClientOptions;
     OAuthCredentials: Auth.Credentials;
 };
-declare function Appoint(params: AppointParams): void;
+declare function Appoint(params?: AppointParams): Promise<Event[]>;
 
 export { Appoint as default };
