@@ -21,10 +21,10 @@
   },
   "devDependencies": {
     "@babel/core": "^7.21.0",
-    "@types/node": "^18.14.1",
+    "@types/node": "^18.14.2",
     "@types/react": "^18.0.28",
     "@types/react-dom": "^18.0.11",
-    "eslint": "8.34.0",
+    "eslint": "8.35.0",
     "eslint-config-appoint": "workspace:*",
     "tsconfig": "workspace:*",
     "typescript": "^4.9.5"

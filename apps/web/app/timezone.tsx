@@ -1,12 +1,9 @@
 "use client"
+import { Interval } from "date-fns"
 import { utcToZonedTime } from "date-fns-tz"
 
-export default function Timezone({
-  data,
-}: {
-  data: { start: Date; end: Date }[]
-}) {
-  const timeZone = "America/New_York" // Intl.DateTimeFormat().resolvedOptions().timeZone
+export default function Timezone({ data }: { data: Interval[] }) {
+  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone
   return (
     <>
       <p suppressHydrationWarning>

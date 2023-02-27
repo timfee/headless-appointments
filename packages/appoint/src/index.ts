@@ -15,7 +15,7 @@ type AppointParams = GetFreeBusyProps &
     }
   >
 
-export default async function Appoint(params?: AppointParams) {
+export default async function getAvailability(params?: AppointParams) {
   console.log(
     "Appoint timezone: ",
     Intl.DateTimeFormat().resolvedOptions().timeZone

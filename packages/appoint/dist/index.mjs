@@ -20,44 +20,50 @@ var __async = (__this, __arguments, generator) => {
 };
 
 // src/index.ts
-import { add as add2, areIntervalsOverlapping, sub } from "date-fns";
 import { utcToZonedTime as utcToZonedTime2 } from "date-fns-tz";
-import { google } from "googleapis";
 
 // src/availability.ts
 import { add, eachMinuteOfInterval, endOfHour, startOfHour } from "date-fns";
 import { isFuture } from "date-fns";
 import { utcToZonedTime } from "date-fns-tz";
-function createAvailability(params) {
-  var _a, _b, _c, _d, _e, _f, _g;
-  let timeZone = (_a = params == null ? void 0 : params.timeZone) != null ? _a : "America/Los_Angeles";
-  let start = (_b = params == null ? void 0 : params.start) != null ? _b : /* @__PURE__ */ new Date();
-  let end = (_c = params == null ? void 0 : params.end) != null ? _c : add(new Date(start), { days: 7 });
-  let duration = (_d = params == null ? void 0 : params.duration) != null ? _d : 30;
-  let forceExcludeWeekends = (_e = params == null ? void 0 : params.forceExcludeWeekends) != null ? _e : true;
-  let availability = (_f = params == null ? void 0 : params.availability) != null ? _f : {};
-  let fallback = (_g = params == null ? void 0 : params.fallback) != null ? _g : [
-    {
-      start: { hour: 9, minute: 0 },
-      end: { hour: 17, minute: 0 }
-    }
-  ];
-  for (let day = forceExcludeWeekends ? 1 : 0; day < (forceExcludeWeekends ? 5 : 6); day++) {
-    availability[day] = params && params.availability ? params.availability[day] : fallback;
+function createAvailability({
+  start,
+  end,
+  timeZoneOfStartAndEndTimes,
+  bookingCriteria = {
+    duration: 30
+  },
+  availability = {
+    dailySlots: {},
+    fallback: [
+      {
+        start: { hour: 9, minute: 0 },
+        end: { hour: 17, minute: 0 }
+      }
+    ],
+    forceExcludeWeekends: false
   }
-  const localStart = startOfHour(start);
-  const localEnd = endOfHour(end);
+}) {
+  var _a, _b;
+  if (!start)
+    throw new Error("Missing start date");
+  if (!end)
+    throw new Error("Missing end date");
+  if (!bookingCriteria.duration)
+    throw new Error("Missing duration");
+  if (!timeZoneOfStartAndEndTimes)
+    throw new Error("Missing timeZone");
+  const dailyAvailability = {};
+  for (let day = availability.forceExcludeWeekends ? 1 : 0; day < (availability.forceExcludeWeekends ? 5 : 6); day++) {
+    dailyAvailability[day] = (_b = (_a = dailyAvailability[day]) != null ? _a : availability.fallback) != null ? _b : [];
+  }
   const intervals = eachMinuteOfInterval(
-    { start: localStart, end: localEnd },
+    { start: startOfHour(start), end: endOfHour(end) },
     {
-      step: duration
+      step: bookingCriteria.duration
     }
   ).filter((date) => isFuture(date)).filter((utcDate) => {
-    const date = utcToZonedTime(utcDate, timeZone);
-    const day = date.getDay();
-    const hour = date.getHours();
-    const minute = date.getMinutes();
-    const slots = availability[day];
+    const date = utcToZonedTime(utcDate, timeZoneOfStartAndEndTimes), day = date.getDay(), hour = date.getHours(), minute = date.getMinutes(), slots = dailyAvailability[day];
     if (!slots)
       return false;
     for (const slot of slots) {
@@ -74,110 +80,157 @@ function createAvailability(params) {
     return false;
   }).map((date) => ({
     start: date,
-    end: add(date, { minutes: duration })
+    end: add(date, { minutes: bookingCriteria.duration })
   }));
   return intervals;
 }
 
-// src/index.ts
-function Appoint(params) {
+// src/busy.ts
+import { google } from "googleapis";
+function getFreeBusyData(params) {
   return __async(this, null, function* () {
-    var _a, _b, _c, _d, _e, _f;
+    var _a, _b, _c;
+    if (!params.start)
+      throw new Error("getFreeBusyData: No start date provided");
+    if (!params.end)
+      throw new Error("getFreeBusyData: No end date provided");
+    if (!(params == null ? void 0 : params.provider))
+      throw new Error("getFreeBusyData: No `provider` object passed");
+    if (!(params == null ? void 0 : params.provider.OAuthClient))
+      throw new Error("getFreeBusyData: `provider` doesn't contain OAuthClient");
+    if (!(params == null ? void 0 : params.provider.OAuthCredentials))
+      throw new Error(
+        "getFreeBusyData: `provider` doesn't include AuthCredentials"
+      );
+    const start = params == null ? void 0 : params.start;
+    const end = params == null ? void 0 : params.end;
+    let auth = new google.auth.OAuth2(
+      params.provider.OAuthClient
+    );
+    auth.setCredentials(params.provider.OAuthCredentials);
+    let calendar = google.calendar({ version: "v3", auth });
+    let timeZone = (_a = (yield calendar.settings.get({
+      setting: "timezone"
+    })).data.value) != null ? _a : "UTC";
+    const busyData = yield calendar.freebusy.query({
+      requestBody: {
+        timeMin: start.toISOString(),
+        timeMax: end.toISOString(),
+        items: [{ id: "primary" }]
+      }
+    });
+    const busySlots = Object.values((_c = (_b = busyData.data) == null ? void 0 : _b.calendars) != null ? _c : {}).flatMap((calendar2) => calendar2.busy).sort((a, b) => {
+      var _a2, _b2, _c2, _d;
+      const aStart = new Date((_a2 = a.start) != null ? _a2 : "");
+      const bStart = new Date((_b2 = b.start) != null ? _b2 : "");
+      const aEnd = new Date((_c2 = a.end) != null ? _c2 : "");
+      const bEnd = new Date((_d = b.end) != null ? _d : "");
+      if (aStart < bStart)
+        return -1;
+      if (aStart > bStart)
+        return 1;
+      if (aEnd < bEnd)
+        return -1;
+      if (aEnd > bEnd)
+        return 1;
+      return 0;
+    }).map((busy) => {
+      var _a2, _b2;
+      return {
+        start: new Date((_a2 = busy.start) != null ? _a2 : ""),
+        end: new Date((_b2 = busy.end) != null ? _b2 : "")
+      };
+    });
+    return { timeZone, busySlots };
+  });
+}
+
+// src/offers.ts
+import { add as add2, areIntervalsOverlapping, sub } from "date-fns";
+function returnAvailableSlots({
+  allSlots,
+  busySlots,
+  padding
+}) {
+  const openSlots = [];
+  const remainingSlots = [...allSlots];
+  for (let i = 0; i < allSlots.length; i++) {
+    const freeSlot = allSlots[i];
+    let isFree = true;
+    for (let j = 0; j < busySlots.length; j++) {
+      const busySlot = busySlots[j];
+      const busyStart = sub(busySlot.start, { minutes: padding });
+      const busyEnd = add2(busySlot.end, { minutes: padding });
+      if (areIntervalsOverlapping(freeSlot, { start: busyStart, end: busyEnd })) {
+        isFree = false;
+        break;
+      }
+    }
+    if (isFree) {
+      openSlots.push(freeSlot);
+    }
+    const index = remainingSlots.indexOf(freeSlot);
+    if (index !== -1) {
+      remainingSlots.splice(index, 1);
+    }
+  }
+  return openSlots;
+}
+
+// src/index.ts
+function getAvailability(params) {
+  return __async(this, null, function* () {
+    var _a, _b;
     console.log(
       "Appoint timezone: ",
       Intl.DateTimeFormat().resolvedOptions().timeZone
     );
-    let start = (_a = params == null ? void 0 : params.start) != null ? _a : /* @__PURE__ */ new Date();
-    let end = (_b = params == null ? void 0 : params.end) != null ? _b : add2(/* @__PURE__ */ new Date(), { days: 3 });
-    let duration = (_c = params == null ? void 0 : params.duration) != null ? _c : 30;
-    let padding = (_d = params == null ? void 0 : params.padding) != null ? _d : 0;
-    let allSlots = [];
-    let busySlots = [];
-    let openSlots = [];
-    if (!(params == null ? void 0 : params.OAuthClient))
-      throw new Error("No oAuthClient provided");
-    if (!(params == null ? void 0 : params.OAuthCredentials))
-      throw new Error("No authCredentials provided");
-    let auth = new google.auth.OAuth2(params.OAuthClient);
-    auth.setCredentials(params.OAuthCredentials);
-    let calendar = google.calendar({ version: "v3", auth });
-    let timeZone = (_f = (_e = params == null ? void 0 : params.ownerTimezone) != null ? _e : (yield calendar.settings.get({
-      setting: "timezone"
-    })).data.value) != null ? _f : "America/Los_Angeles";
-    allSlots = createAvailability({
-      start,
-      end,
-      timeZone,
-      duration
+    if (!(params == null ? void 0 : params.start))
+      throw new Error("No `start` date passed");
+    if (!(params == null ? void 0 : params.end))
+      throw new Error("No `end` date passed");
+    if (!params.bookingCriteria.duration)
+      throw new Error("No `duration` passed");
+    let padding = (_a = params == null ? void 0 : params.bookingCriteria.padding) != null ? _a : 0;
+    if (!(params == null ? void 0 : params.provider))
+      throw new Error("No `provider` object passed");
+    if (!(params == null ? void 0 : params.provider.OAuthClient))
+      throw new Error("`provider` doesn't contain OAuthClient");
+    if (!(params == null ? void 0 : params.provider.OAuthCredentials))
+      throw new Error("`provider` doesn't include AuthCredentials");
+    const { busySlots, timeZone } = yield getFreeBusyData({
+      start: params.start,
+      end: params.end,
+      provider: {
+        name: "google",
+        OAuthClient: params.provider.OAuthClient,
+        OAuthCredentials: params.provider.OAuthCredentials
+      }
     });
-    busySlots = yield getBusySlotsFromServer();
-    const remainingSlots = [...allSlots];
-    for (let i = 0; i < allSlots.length; i++) {
-      const freeSlot = allSlots[i];
-      let isFree = true;
-      for (let j = 0; j < busySlots.length; j++) {
-        const busySlot = busySlots[j];
-        const busyStart = sub(busySlot.start, { minutes: padding });
-        const busyEnd = add2(busySlot.end, { minutes: padding });
-        if (areIntervalsOverlapping(freeSlot, { start: busyStart, end: busyEnd })) {
-          isFree = false;
-          break;
-        }
+    const timeZoneOfStartAndEndTimes = (_b = params == null ? void 0 : params.timeZoneOfStartAndEndTimes) != null ? _b : timeZone;
+    const allSlots = createAvailability({
+      start: params.start,
+      end: params.end,
+      timeZoneOfStartAndEndTimes,
+      bookingCriteria: {
+        duration: params.bookingCriteria.duration
       }
-      if (isFree) {
-        openSlots.push(freeSlot);
-      }
-      const index = remainingSlots.indexOf(freeSlot);
-      if (index !== -1) {
-        remainingSlots.splice(index, 1);
-      }
-    }
+    });
+    const openSlots = returnAvailableSlots({
+      allSlots,
+      busySlots,
+      padding
+    });
     console.log(
       `Open slots in ${timeZone}:`,
-      openSlots.map(({ start: start2, end: end2 }) => ({
-        start: utcToZonedTime2(start2, timeZone),
-        end: utcToZonedTime2(start2, timeZone)
+      openSlots.map(({ start, end }) => ({
+        start: utcToZonedTime2(start, timeZone),
+        end: utcToZonedTime2(start, timeZone)
       }))
     );
     return openSlots;
-    function getBusySlotsFromServer() {
-      return __async(this, null, function* () {
-        var _a2, _b2;
-        const busyData = yield calendar.freebusy.query({
-          requestBody: {
-            timeMin: start.toISOString(),
-            timeMax: end.toISOString(),
-            timeZone,
-            items: [{ id: "primary" }]
-          }
-        });
-        busySlots = Object.values((_b2 = (_a2 = busyData.data) == null ? void 0 : _a2.calendars) != null ? _b2 : {}).flatMap((calendar2) => calendar2.busy).sort((a, b) => {
-          var _a3, _b3, _c2, _d2;
-          const aStart = new Date((_a3 = a.start) != null ? _a3 : "");
-          const bStart = new Date((_b3 = b.start) != null ? _b3 : "");
-          const aEnd = new Date((_c2 = a.end) != null ? _c2 : "");
-          const bEnd = new Date((_d2 = b.end) != null ? _d2 : "");
-          if (aStart < bStart)
-            return -1;
-          if (aStart > bStart)
-            return 1;
-          if (aEnd < bEnd)
-            return -1;
-          if (aEnd > bEnd)
-            return 1;
-          return 0;
-        }).map((busy) => {
-          var _a3, _b3;
-          return {
-            start: new Date((_a3 = busy.start) != null ? _a3 : ""),
-            end: new Date((_b3 = busy.end) != null ? _b3 : "")
-          };
-        });
-        return busySlots;
-      });
-    }
   });
 }
 export {
-  Appoint as default
+  getAvailability as default
 };
