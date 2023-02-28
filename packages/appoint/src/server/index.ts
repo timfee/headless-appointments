@@ -1,4 +1,4 @@
-import { utcToZonedTime } from "date-fns-tz"
+import "server-only"
 
 import { createAvailability, CreateAvailabilityProps } from "./availability"
 import { getFreeBusyData, GetFreeBusyProps } from "./busy"
@@ -16,10 +16,6 @@ type AppointParams = GetFreeBusyProps &
   >
 
 export default async function getAvailability(params?: AppointParams) {
-  console.log(
-    "Appoint timezone: ",
-    Intl.DateTimeFormat().resolvedOptions().timeZone
-  )
   if (!params?.start) throw new Error("No `start` date passed")
   if (!params?.end) throw new Error("No `end` date passed")
   if (!params.bookingCriteria.duration) throw new Error("No `duration` passed")
@@ -59,14 +55,6 @@ export default async function getAvailability(params?: AppointParams) {
     busySlots,
     padding,
   })
-
-  console.log(
-    `Open slots in ${timeZone}:`,
-    openSlots.map(({ start, end }) => ({
-      start: utcToZonedTime(start, timeZone),
-      end: utcToZonedTime(start, timeZone),
-    }))
-  )
 
   return openSlots
 }

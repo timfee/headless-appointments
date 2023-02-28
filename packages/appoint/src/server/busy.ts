@@ -1,5 +1,6 @@
-import { type Interval } from "date-fns"
-import { google, type Auth } from "googleapis"
+import { type Auth, google } from "googleapis"
+
+import { DateInterval } from "../shared"
 
 export type GetFreeBusyProps = {
   start: Date
@@ -56,7 +57,9 @@ export async function getFreeBusyData(params: GetFreeBusyProps) {
     },
   })
 
-  const busySlots: Interval[] = Object.values(busyData.data?.calendars ?? {})
+  const busySlots: DateInterval[] = Object.values(
+    busyData.data?.calendars ?? {}
+  )
     .flatMap((calendar) => calendar.busy!)
     .sort((a, b) => {
       const aStart = new Date(a.start ?? "")

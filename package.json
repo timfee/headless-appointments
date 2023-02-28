@@ -1,7 +1,6 @@
 {
-  "name": "appoint",
-  "version": "0.0.0",
-  "private": true,
+  "version": "0.0.1",
+  "author": "tim@timfeeley.com",
   "workspaces": [
     "apps/*",
     "packages/*"
@@ -14,7 +13,6 @@
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "lint": "turbo run lint",
     "release": "turbo run build --filter=docs^... && changeset publish",
-    "test": "turbo run test",
     "version-packages": "changeset version"
   },
   "dependencies": {
@@ -25,7 +23,7 @@
     "eslint-config-appoint": "workspace:*",
     "prettier": "^2.8.4",
     "prettier-plugin-packagejson": "2.4.3",
-    "turbo": "^1.8.2"
+    "turbo": "^1.8.3"
   },
   "packageManager": "pnpm@7.27.1",
   "engines": {

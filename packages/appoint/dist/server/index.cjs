@@ -1,3 +1,21 @@
+"use strict";
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 var __async = (__this, __arguments, generator) => {
   return new Promise((resolve, reject) => {
     var fulfilled = (value) => {
@@ -19,13 +37,19 @@ var __async = (__this, __arguments, generator) => {
   });
 };
 
-// src/index.ts
-import { utcToZonedTime as utcToZonedTime2 } from "date-fns-tz";
+// src/server/index.ts
+var server_exports = {};
+__export(server_exports, {
+  default: () => getAvailability
+});
+module.exports = __toCommonJS(server_exports);
+var import_server_only2 = require("server-only");
 
-// src/availability.ts
-import { add, eachMinuteOfInterval, endOfHour, startOfHour } from "date-fns";
-import { isFuture } from "date-fns";
-import { utcToZonedTime } from "date-fns-tz";
+// src/server/availability.ts
+var import_server_only = require("server-only");
+var import_date_fns = require("date-fns");
+var import_date_fns2 = require("date-fns");
+var import_date_fns_tz = require("date-fns-tz");
 function createAvailability({
   start,
   end,
@@ -57,13 +81,13 @@ function createAvailability({
   for (let day = availability.forceExcludeWeekends ? 1 : 0; day < (availability.forceExcludeWeekends ? 5 : 6); day++) {
     dailyAvailability[day] = (_b = (_a = dailyAvailability[day]) != null ? _a : availability.fallback) != null ? _b : [];
   }
-  const intervals = eachMinuteOfInterval(
-    { start: startOfHour(start), end: endOfHour(end) },
+  const intervals = (0, import_date_fns.eachMinuteOfInterval)(
+    { start: (0, import_date_fns.startOfHour)(start), end: (0, import_date_fns.endOfHour)(end) },
     {
       step: bookingCriteria.duration
     }
-  ).filter((date) => isFuture(date)).filter((utcDate) => {
-    const date = utcToZonedTime(utcDate, timeZoneOfStartAndEndTimes), day = date.getDay(), hour = date.getHours(), minute = date.getMinutes(), slots = dailyAvailability[day];
+  ).filter((date) => (0, import_date_fns2.isFuture)(date)).filter((utcDate) => {
+    const date = (0, import_date_fns_tz.utcToZonedTime)(utcDate, timeZoneOfStartAndEndTimes), day = date.getDay(), hour = date.getHours(), minute = date.getMinutes(), slots = dailyAvailability[day];
     if (!slots)
       return false;
     for (const slot of slots) {
@@ -80,13 +104,13 @@ function createAvailability({
     return false;
   }).map((date) => ({
     start: date,
-    end: add(date, { minutes: bookingCriteria.duration })
+    end: (0, import_date_fns.add)(date, { minutes: bookingCriteria.duration })
   }));
   return intervals;
 }
 
-// src/busy.ts
-import { google } from "googleapis";
+// src/server/busy.ts
+var import_googleapis = require("googleapis");
 function getFreeBusyData(params) {
   return __async(this, null, function* () {
     var _a, _b, _c;
@@ -104,11 +128,11 @@ function getFreeBusyData(params) {
       );
     const start = params == null ? void 0 : params.start;
     const end = params == null ? void 0 : params.end;
-    let auth = new google.auth.OAuth2(
+    let auth = new import_googleapis.google.auth.OAuth2(
       params.provider.OAuthClient
     );
     auth.setCredentials(params.provider.OAuthCredentials);
-    let calendar = google.calendar({ version: "v3", auth });
+    let calendar = import_googleapis.google.calendar({ version: "v3", auth });
     let timeZone = (_a = (yield calendar.settings.get({
       setting: "timezone"
     })).data.value) != null ? _a : "UTC";
@@ -119,7 +143,9 @@ function getFreeBusyData(params) {
         items: [{ id: "primary" }]
       }
     });
-    const busySlots = Object.values((_c = (_b = busyData.data) == null ? void 0 : _b.calendars) != null ? _c : {}).flatMap((calendar2) => calendar2.busy).sort((a, b) => {
+    const busySlots = Object.values(
+      (_c = (_b = busyData.data) == null ? void 0 : _b.calendars) != null ? _c : {}
+    ).flatMap((calendar2) => calendar2.busy).sort((a, b) => {
       var _a2, _b2, _c2, _d;
       const aStart = new Date((_a2 = a.start) != null ? _a2 : "");
       const bStart = new Date((_b2 = b.start) != null ? _b2 : "");
@@ -145,8 +171,8 @@ function getFreeBusyData(params) {
   });
 }
 
-// src/offers.ts
-import { add as add2, areIntervalsOverlapping, sub } from "date-fns";
+// src/server/offers.ts
+var import_date_fns3 = require("date-fns");
 function returnAvailableSlots({
   allSlots,
   busySlots,
@@ -159,9 +185,9 @@ function returnAvailableSlots({
     let isFree = true;
     for (let j = 0; j < busySlots.length; j++) {
       const busySlot = busySlots[j];
-      const busyStart = sub(busySlot.start, { minutes: padding });
-      const busyEnd = add2(busySlot.end, { minutes: padding });
-      if (areIntervalsOverlapping(freeSlot, { start: busyStart, end: busyEnd })) {
+      const busyStart = (0, import_date_fns3.sub)(busySlot.start, { minutes: padding });
+      const busyEnd = (0, import_date_fns3.add)(busySlot.end, { minutes: padding });
+      if ((0, import_date_fns3.areIntervalsOverlapping)(freeSlot, { start: busyStart, end: busyEnd })) {
         isFree = false;
         break;
       }
@@ -177,14 +203,10 @@ function returnAvailableSlots({
   return openSlots;
 }
 
-// src/index.ts
+// src/server/index.ts
 function getAvailability(params) {
   return __async(this, null, function* () {
     var _a, _b;
-    console.log(
-      "Appoint timezone: ",
-      Intl.DateTimeFormat().resolvedOptions().timeZone
-    );
     if (!(params == null ? void 0 : params.start))
       throw new Error("No `start` date passed");
     if (!(params == null ? void 0 : params.end))
@@ -221,16 +243,9 @@ function getAvailability(params) {
       busySlots,
       padding
     });
-    console.log(
-      `Open slots in ${timeZone}:`,
-      openSlots.map(({ start, end }) => ({
-        start: utcToZonedTime2(start, timeZone),
-        end: utcToZonedTime2(start, timeZone)
-      }))
-    );
     return openSlots;
   });
 }
-export {
-  getAvailability as default
-};
+// Annotate the CommonJS export names for ESM import in node:
+0 && (module.exports = {});
+//# sourceMappingURL=index.cjs.map

@@ -1,5 +1,8 @@
-import getAvailability from "appoint"
+import { mapDatesToStrings } from "appoint"
+import { AvailabilityProvider } from "appoint/client"
+import getAvailability from "appoint/server"
 import { add } from "date-fns"
+
 import Timezone from "./timezone"
 
 export default async function Page() {
@@ -30,7 +33,9 @@ export default async function Page() {
           Intl.DateTimeFormat().resolvedOptions().timeZone
         }`}
       </h1>
-      <Timezone data={appoint} data-superjson />
+      <AvailabilityProvider data={mapDatesToStrings(appoint)}>
+        <Timezone />
+      </AvailabilityProvider>
     </div>
   )
 }

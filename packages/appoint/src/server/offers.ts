@@ -1,4 +1,6 @@
-import { add, areIntervalsOverlapping, sub, type Interval } from "date-fns"
+import { add, areIntervalsOverlapping, sub } from "date-fns"
+
+import { DateInterval } from "../shared"
 
 /** Options for {@link returnAvailableSlots} */
 export type ReturnAvailableSlotsProps = {
@@ -6,12 +8,12 @@ export type ReturnAvailableSlotsProps = {
    * An array of intervalus we _could_ offer, provided
    * there's no conflicting busy periods.
    */
-  allSlots: Interval[]
+  allSlots: DateInterval[]
   /**
    * An array of busy intervals to exclude from the
    * final result.
    */
-  busySlots: Interval[]
+  busySlots: DateInterval[]
   /**
    * The number of minutes to "pad" each interval, e.g.
    * start and end `padding` minutes earlier and later,
@@ -28,7 +30,7 @@ export function returnAvailableSlots({
   padding,
 }: ReturnAvailableSlotsProps) {
   // Our final array of available slots
-  const openSlots: Interval[] = []
+  const openSlots: DateInterval[] = []
 
   // Make a deep copy of the allSlots array
   const remainingSlots = [...allSlots]

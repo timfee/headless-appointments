@@ -1,5 +1,10 @@
 import { Auth } from 'googleapis';
 
+type DateInterval = {
+    start: Date;
+    end: Date;
+};
+
 type AvailabilitySlot = {
     start: {
         hour: number;
@@ -104,8 +109,7 @@ type GetObjDifferentKeys<T, U, T0 = Omit<T, keyof U> & Omit<U, keyof T>, T1 = {
  * helper generic for `DeepMergeTwoTypes`
  */
 type GetObjSameKeys<T, U> = Omit<T | U, keyof GetObjDifferentKeys<T, U>>;
-type MergeTwoObjects<T, U, T0 = Partial<GetObjDifferentKeys<T, U>> & // shared keys are recursively resolved by `DeepMergeTwoTypes<...>`
-{
+type MergeTwoObjects<T, U, T0 = Partial<GetObjDifferentKeys<T, U>> & {
     [K in keyof GetObjSameKeys<T, U>]: DeepMergeTwoTypes<T[K], U[K]>;
 }, T1 = {
     [K in keyof T0]: T0[K];
@@ -127,6 +131,6 @@ type AppointParams = GetFreeBusyProps & DeepMergeTwoTypes<CreateAvailabilityProp
         padding: number;
     };
 }>;
-declare function getAvailability(params?: AppointParams): Promise<Interval[]>;
+declare function getAvailability(params?: AppointParams): Promise<DateInterval[]>;
 
 export { getAvailability as default };

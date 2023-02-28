@@ -1,6 +1,10 @@
+import "server-only"
+
 import { add, eachMinuteOfInterval, endOfHour, startOfHour } from "date-fns"
-import { isFuture, type Interval } from "date-fns"
+import { isFuture } from "date-fns"
 import { utcToZonedTime } from "date-fns-tz"
+
+import { DateInterval } from "../shared"
 
 export type AvailabilitySlot = {
   start: { hour: number; minute: number }
@@ -90,7 +94,7 @@ export function createAvailability({
     ],
     forceExcludeWeekends: false,
   },
-}: CreateAvailabilityProps): Interval[] {
+}: CreateAvailabilityProps): DateInterval[] {
   // Required fields
   if (!start) throw new Error("Missing start date")
   if (!end) throw new Error("Missing end date")
@@ -113,7 +117,7 @@ export function createAvailability({
       dailyAvailability[day] ?? availability.fallback ?? []
   }
 
-  const intervals: Interval[] = eachMinuteOfInterval(
+  const intervals: DateInterval[] = eachMinuteOfInterval(
     { start: startOfHour(start), end: endOfHour(end) },
     {
       step: bookingCriteria.duration,
@@ -153,17 +157,6 @@ export function createAvailability({
       start: date,
       end: add(date, { minutes: bookingCriteria.duration }),
     }))
-
-  // console.log(
-  //   intervals.map(({ start, end }) => ({
-  //     start: formatInTimeZone(start, timeZone, "yyyy-MM-dd K:mm aa zzzz"),
-  //     end: formatInTimeZone(
-  //       add(start, { minutes: duration }),
-  //       timeZone,
-  //       "yyyy-MM-dd K:mm aa zzzz"
-  //     ),
-  //   }))
-  // )
 
   return intervals
 }

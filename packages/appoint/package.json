@@ -1,40 +1,52 @@
 {
-  "name": "appoint",
-  "version": "0.0.0",
-  "private": true,
+  "name": "headless-appointments",
+  "version": "0.0.1",
   "license": "MIT",
+  "author": "tim@timfeeley.com",
   "sideEffects": false,
-  "main": "./dist/index.js",
-  "module": "./dist/index.mjs",
-  "types": "./dist/index.d.ts",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/shared/index.js",
+      "node": "./dist/server/index.cjs"
+    },
+    "./client": "./dist/client/index.js",
+    "./server": "./dist/server/index.cjs"
+  },
+  "main": "./dist/shared/index.js",
+  "types": "./dist/shared/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "client": [
+        "./dist/client/index.d.ts"
+      ],
+      "server": [
+        "./dist/server/index.d.ts"
+      ]
+    }
+  },
   "files": [
-    "dist/**"
+    "dist/"
   ],
   "scripts": {
-    "build": "tsup src/index.ts --format esm,cjs --dts --external react",
+    "build": "tsup",
     "clean": "rm -rf dist",
-    "dev": "tsup src/index.ts --format esm,cjs --watch --dts --external react",
-    "lint": "eslint \"src/**/*.ts*\"",
-    "test": "jest"
-  },
-  "jest": {
-    "preset": "jest-presets/jest/node"
+    "dev": "tsup --watch",
+    "lint": "eslint \"src/**/*.ts*\""
   },
   "dependencies": {
     "date-fns": "2.29.3",
     "date-fns-tz": "2.0.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "server-only": "^0.0.1"
   },
   "devDependencies": {
-    "@types/jest": "^29.4.0",
     "@types/node": "18.14.2",
     "@types/react": "^18.0.28",
     "@types/react-dom": "^18.0.11",
     "eslint": "^8.35.0",
     "eslint-config-appoint": "workspace:*",
     "googleapis": "^111.0.0",
-    "jest": "^29.4.3",
-    "jest-presets": "workspace:*",
     "react": "^18.2.0",
     "tsconfig": "workspace:*",
     "tsup": "^6.6.3",
@@ -42,5 +54,8 @@
   },
   "peerDependencies": {
     "googleapis": "^81.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
