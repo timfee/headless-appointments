@@ -8,6 +8,7 @@
   "scripts": {
     "build": "turbo run build",
     "changeset": "changeset",
+    "ci:publish": "pnpm publish -r",
     "clean": "turbo run clean && rm -rf node_modules",
     "dev": "dotenv -- turbo run dev --no-cache --continue",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
