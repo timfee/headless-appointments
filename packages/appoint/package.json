@@ -1,6 +1,11 @@
 {
   "name": "headless-appointments",
   "version": "0.1.0",
+  "description": "A headless appointments library for Google Calendar",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/timfee/headless-apointments"
+  },
   "license": "MIT",
   "author": "tim@timfeeley.com",
   "sideEffects": false,
