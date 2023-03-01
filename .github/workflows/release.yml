@@ -15,9 +15,13 @@ on:
   push:
     branches:
       - main
+      
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
 env:
   CI: true
   PNPM_CACHE_FOLDER: .pnpm-store
+  
 jobs:
   version:
     timeout-minutes: 15
@@ -30,7 +34,7 @@ jobs:
       - name: setup node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 19
+          node-version: 19.x
       - name: install pnpm
         run: npm i pnpm@latest -g
       - name: setup pnpm config
