@@ -14,7 +14,7 @@
     "dev": "dotenv -- turbo run dev --no-cache --continue",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "lint": "turbo run lint",
-    "release": "turbo run build --filter=docs^... && changeset publish"
+    "release": "turbo run build --filter=docs^..."
   },
   "dependencies": {
     "dotenv-cli": "^7.0.0"

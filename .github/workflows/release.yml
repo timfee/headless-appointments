@@ -1,27 +1,24 @@
-name: Changesets
+name: Update NPM Package
+
 on:
   workflow_dispatch:
     inputs:
       logLevel:
-        description: 'Log level'
+        description: "Log level"
         required: true
-        default: 'warning'
+        default: "warning"
         type: choice
         options:
-        - info
-        - warning
-        - debug
-        
-  push:
-    branches:
-      - main
-      
+          - info
+          - warning
+          - debug
+
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
 env:
   CI: true
   PNPM_CACHE_FOLDER: .pnpm-store
-  
+
 jobs:
   version:
     timeout-minutes: 15
